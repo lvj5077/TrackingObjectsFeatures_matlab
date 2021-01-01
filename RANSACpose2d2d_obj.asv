@@ -1,7 +1,4 @@
 function [F,inlierPts,inlierObjs] = RANSACpose2d2d_obj(vpts1,vpts2,obj_stat)
-
-vpts1 = normalize(vpts1);
-vpts2 = normalize(vpts2);
 F= zeros(3);
 iterations = 0;
 N = length(vpts1);
@@ -17,7 +14,7 @@ inlierObjs = zeros(objKinds,1);
 inlierPts = zeros(N,1);
 % inlierPts = ones(N,1);
 staticLevelThreshold = 0.5;
-SamponDistThreshold = 2e-04;
+SamponDistThreshold = .4;
 
 
 
@@ -33,37 +30,32 @@ while (iterations < iterationMax && foundT==0 )
     
     all_weight = 0;
     static_weight = 0;
-    static_weight_localBest = 0;
     for i = 1:objKinds
         objIdex = find(obj_stat(:)==i);
-        objectPts_1 = vpts1(objIdex,:);
-        objectPts_2 = vpts2(objIdex,:);
+        objectPts_1 = vpts1(objIdex,1:4)';
+        objectPts_2 = vpts2(objIdex,1:4)';
         
-        if (~isempty(objectPts_1))
-            all_weight = all_weight+0.5;
+        if (~isempty(objectPts1))
+            static_weight = static_weight+0.5;
             if (i ==1)
-                all_weight = all_weight+0.5;
+                static_weight = static_weight+0.5;
             end
+            error_Pts = vecnorm(T_test*objectPts_1-objectPts_2);
+            [GoodptsErroridx, GoodptsError] = find(error_Pts<errorThreshold);
             
-            error_Pts = sampsonErrf(F_test, objectPts_1, objectPts_2);
-            [GoodptsErroridx, GoodptsError] = find(error_Pts<SamponDistThreshold);
-            rr = length(GoodptsError)/length(error_Pts)
-            if (rr > feature_inlierRatio)
+%             error_object = mean(GoodptsError);
+            error_object = mean(error_Pts);
+            if (error_object<errorThreshold || length(GoodptsError)/length(error_Pts) > inlierThreshold)
+%             if (error_object<errorThreshold)
                 inlierPts(objIdex(GoodptsErroridx==1)) = 1;
-                if (i==1) %% background weight is higher
-                    static_weight = static_weight+0.5;
-                end
-                static_weight = static_weight+0.5
+                majorKind = majorKind+0.5;
                 inlierObjs(i) = 1;
-
+                if (i==1) %% background weight is higher
+                    majorKind = majorKind+0.5;
+                end
+%                 disp(T_test)
+%                 disp(i)
             end
-        end
-        
-        if (static_weight > static_weight_localBest)
-            static_weight_localBest = static_weight;
-            inlierPts_localBest = inlierPts;
-            inlierObjs_localBest = inlierObjs;
-            F_test_localBest = F_test;
         end
     end
     
@@ -83,9 +75,6 @@ end
 
 if (foundT == 0)
     disp("failed")
-    F = F_test_localBest;
-    inlierPts = inlierPts_localBest;
-    inlierObjs = inlierObjs_localBest;
 %     disp(T_test)
 %     disp(inlierObjs')
 %     disp(inlierNum)
