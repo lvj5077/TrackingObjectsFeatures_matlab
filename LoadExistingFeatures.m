@@ -19,7 +19,7 @@ end
 
 %%
 clc
-
+% [T,inlierPts,inlierObjs] = RANSACpose2d2d_obj(vpts1,vpts2,ones(length(vpts1),1))
 [T,inlierPts,inlierObjs] = RANSACpose2d2d_obj(vpts1,vpts2,obj_stat);
 inlierObjs'
 vpts1_inlier = vpts1(inlierPts==1,:);

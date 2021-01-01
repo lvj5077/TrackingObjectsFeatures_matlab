@@ -18,7 +18,7 @@ inlierObjs = zeros(objKinds,1);
 inlierPts = zeros(N,1);
 % inlierPts = ones(N,1);
 staticLevelThreshold = 0.8;
-SamponDistThreshold = 0.3;
+SamponDistThreshold = 3e-4;
 
 static_weight_localBest = 0;
 
@@ -54,9 +54,9 @@ while (iterations < iterationMax && foundT==0 )
             if (rr > feature_inlierRatio)
                 inlierPts(objIdex(GoodptsErroridx==1)) = 1;
                 if (i==1) %% background weight is higher
-                    static_weight = static_weight+0.5;
+                    static_weight = static_weight+0.5*rr;
                 end
-                static_weight = static_weight+0.5;
+                static_weight = static_weight+0.5*rr;
                 inlierObjs(i) = 1;
 
             end
