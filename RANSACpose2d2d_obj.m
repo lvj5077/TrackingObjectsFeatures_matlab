@@ -1,5 +1,5 @@
-function [T,inlierPts,inlierObjs] = RANSACpose3d3d_obj(objectPts1,objectPts2,obj_stat)
-T= eye(4);
+function [F,inlierPts,inlierObjs] = RANSACpose2d2d_obj(objectPts1,objectPts2,obj_stat)
+F= eye(4);
 iterations = 0;
 N = length(objectPts1);
 objKinds = max(obj_stat(:,:));
@@ -11,7 +11,7 @@ inlierPts = zeros(N,1);
 objThreshold = 0.5;
 inlierThreshold = 0.5;
 errorThreshold = .4;
-testPtsN = 4;
+testPtsN = 5;
 
 while (iterations < 200000 && foundT==0 )
     inlierObjs = zeros(objKinds,1);
@@ -54,7 +54,7 @@ while (iterations < 200000 && foundT==0 )
     inlierNum = length(find(inlierPts(:)>0));
     if (majorKind/totalKind>objThreshold && inlierNum>20 )
         foundT = 1;
-        T = T_test;
+        F = T_test;
         disp("iterations "+iterations)
         disp("inlier " + inlierNum)
         disp("inlier ratio " + inlierNum/N )

@@ -26,7 +26,7 @@ imshow(I1_pdic)
 
 colorstyle = ["g*","b*","c*","m*","r*","mx","b<","r<"];
 
-obj_dec1 = [1,420,146,480,4;56,280,1,125,3;30,155,500,640,5;56,200,410,525,2;35,125,90,130,1];
+obj_dec1 = [1,480,146,480,4;56,280,1,125,3;30,155,500,640,5;56,200,410,525,2;35,125,90,130,1];
 
 objsize = (obj_dec1(:,2)-obj_dec1(:,1)).*(obj_dec1(:,4)-obj_dec1(:,3));
 obj_dec1 = [obj_dec1,objsize];
@@ -78,9 +78,9 @@ tempMat = cell2mat(tempPts);
 C1 = single(reshape(tempMat',[2,length(tempMat)/2]))';
 hold on
 plot(C1(:,1),C1(:,2),colorstyle(1))
-% figure,imagesc(masks_obj1)
+figure,imagesc(masks_obj1)
 
-
+%%
 figure
 imshow(I2_pdic);
 
@@ -166,8 +166,12 @@ for i = 1:length(vpts1)
 %      plot(vpts2(i,1),vpts2(i,2),'ro')
 %     end
 end
-
+%%
 figure,showMatchedFeatures(I1_pdic,I2_pdic,vpts1(obj_stat>0,:),vpts2(obj_stat>0,:),'montage','PlotOptions',{'yo','yo','y-'});
+
+I1_pdic = imread('/Users/jin/Desktop/results/predictions125.jpg');
+I2_pdic = imread('/Users/jin/Desktop/results/predictions530.jpg');
+colorstyle = ["g*","b*","c*","m*","r*","mx","b<","r<"];
 
 % obj_stat(obj_stat(:,1)==0) = 8;
 for i = 1:length(vpts1)
@@ -221,21 +225,22 @@ pt3d1 = pt3d1(pt3d1(:,3)>0,:);
 
 %%
 clc
-close all
+% close all
 
 
 [T,inlierPts,inlierObjs] = RANSACpose3d3d_obj(pt3d1,pt3d2,obj_stat);
-%%
-T1= eye(4);
-T1(1:3,1:3) = quat2rotm([0.997657 -0.0170876 0.0636572 0.0183562]);
-T1(1:3,4) =[-0.327008 0.109364 -0.234635]';
-T= T1
-inlierObjs'
+
+% T1= eye(4);
+% T1(1:3,1:3) = quat2rotm([0.997657 -0.0170876 0.0636572 0.0183562]);
+% T1(1:3,4) =[-0.327008 0.109364 -0.234635]';
+% T= T1
+% inlierObjs'
 rotm2eul(T(1:3,1:3))*180/pi
 error_Pts = vecnorm(T*pt3d1(inlierPts==1,:)'-pt3d2(inlierPts==1,:)');
 
 mean(error_Pts)
 
+error_Pts = vecnorm(T*pt3d1(:,:)'-pt3d2(:,:)');
 
 for i = 1:7
     if (~isempty(pt3d2(obj_stat(:)==i,:)))
@@ -245,9 +250,9 @@ for i = 1:7
 end
 
 
-vpts1_inlier = vpts1(inlierPts==1,:);
-vpts2_inlier = vpts2(inlierPts==1,:);
-obj_stat_inler = obj_stat(inlierPts==1,:);
+vpts1_inlier = vpts1(inlierPts==1&obj_stat(:)~=5&error_Pts(:)<0.2,:);
+vpts2_inlier = vpts2(inlierPts==1&obj_stat(:)~=5&error_Pts(:)<0.2,:);
+obj_stat_inler = obj_stat(inlierPts==1&obj_stat(:)~=5&error_Pts(:)<0.2,:);
 
 figure,showMatchedFeatures(I1_pdic,I2_pdic,vpts1_inlier(obj_stat_inler>0,:),vpts2_inlier(obj_stat_inler>0,:),'montage','PlotOptions',{'yo','yo','y-'});
 
@@ -291,7 +296,7 @@ end
 
 %%
 clc
-idx= find(obj_stat(:)==5);
+idx= find(obj_stat(:)~=5);
 essential_matrix = cv.findEssentialMat(vpts1(idx,:), vpts2(idx,:), 'CameraMatrix',[fx 0 cx; 0 fy cy; 0 0 1]);
 [R, t, good] = cv.recoverPose(essential_matrix, vpts1(idx,:), vpts2(idx,:),'CameraMatrix',[fx 0 cx; 0 fy cy; 0 0 1]);
 good
