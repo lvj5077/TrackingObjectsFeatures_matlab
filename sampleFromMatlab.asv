@@ -1,27 +1,23 @@
-s=1000;
-fx = 605.0697021484375 ;
-fy = 605.45703125;
-skew = 0;
-cx = 325.93792724609375;
-cy = 247.49156188964844;
-c_intrinsic = cameraIntrinsics([605.0697021484375,605.45703125],[325.93792724609375,247.49156188964844],[480,640],'RadialDistortion',[0.14949573576450348, -0.49464672803878784, 0.42560458183288574],'TangentialDistortion',[0.00035660676076076925, 0.0001328527432633564]);
-
+fx = 1460.079224;
+fy = 1460.079224;
+cx = 956.985168;
+cy = 655.813293;
 K = [fx 0 cx;0 fy cy;0 0 1];
-I2 = imread('/Users/jin/Desktop/moveL515/color/moving/1608253888.528166720.png');
-I1 = imread('/Users/jin/Desktop/moveL515/color/moving/1608253890.176004345.png');
+I1 = imread('/Volumes/BlackSSD/testMoving/2020-12-06T14-30-09/color/2274.png');
+I2 = imread('/Volumes/BlackSSD/testMoving/2020-12-06T14-30-09/color/2374.png');
 figure
 imshowpair(I1, I2, 'montage'); 
 title('Original Images');
 
 % Detect feature points
-imagePoints1 = detectORBFeatures(rgb2gray(I1));
-
+imagePoints1 = detectMinEigenFeatures(rgb2gray(I1), 'MinQuality', 0.1);
+%%
 % Visualize detected points
 figure
 imshow(I1, 'InitialMagnification', 50);
 title('150 Strongest Corners from the First Image');
 hold on
-plot(selectStrongest(imagePoints1, 250));
+plot(selectStrongest(imagePoints1, 150));
 
 % Create the point tracker
 tracker = vision.PointTracker('MaxBidirectionalError', 1, 'NumPyramidLevels', 5);
@@ -34,7 +30,7 @@ initialize(tracker, imagePoints1, I1);
 [imagePoints2, validIdx] = step(tracker, I2);
 matchedPoints1 = imagePoints1(validIdx, :);
 matchedPoints2 = imagePoints2(validIdx, :);
-
+%%
 % Visualize correspondences
 figure
 showMatchedFeatures(I1, I2, matchedPoints1, matchedPoints2);
@@ -42,7 +38,7 @@ title('Tracked Features');
 
 % Estimate the fundamental matrix
 [fMatrix, epipolarInliers] = estimateFundamentalMatrix(...
-  matchedPoints1, matchedPoints2, 'Method', 'MSAC', 'NumTrials', 100000,'DistanceType','Sampson','InlierPercentage',60); %'Sampson' (default) | 'Algebraic'
+  matchedPoints1, matchedPoints2, 'Method', 'MSAC', 'NumTrials', 10000);
 
 % Find epipolar inliers
 inlierPoints1 = matchedPoints1(epipolarInliers, :);
@@ -53,11 +49,10 @@ figure
 showMatchedFeatures(I1, I2, inlierPoints1, inlierPoints2);
 title('Epipolar Inliers');
 
-[R, t] = relativeCameraPose(fMatrix, c_intrinsic, inlierPoints1, inlierPoints2)
-euler = rotm2eul(R)
+[R, t] = cameraPose(fMatrix, cameraIntrinsics(fx,[cx,cy],[480,640]), inlierPoints1, inlierPoints2);
 % Detect dense feature points
-imagePoints1 = detectORBFeatures(rgb2gray(I1));
-%%
+imagePoints1 = detectMinEigenFeatures(rgb2gray(I1), 'MinQuality', 0.001);
+
 % Create the point tracker
 tracker = vision.PointTracker('MaxBidirectionalError', 1, 'NumPyramidLevels', 5);
 
@@ -69,7 +64,7 @@ initialize(tracker, imagePoints1, I1);
 [imagePoints2, validIdx] = step(tracker, I2);
 matchedPoints1 = imagePoints1(validIdx, :);
 matchedPoints2 = imagePoints2(validIdx, :);
-%%
+
 % Compute the camera matrices for each position of the camera
 % The first camera is at the origin looking along the X-axis. Thus, its
 % rotation matrix is identity, and its translation vector is 0.
