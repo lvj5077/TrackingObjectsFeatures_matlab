@@ -4,6 +4,7 @@ I1_pdic = imread('/Users/jin/Desktop/results/predictions125.jpg');
 I2_pdic = imread('/Users/jin/Desktop/results/predictions530.jpg');
 colorstyle = ["g*","b*","c*","m*","r*","mx","b<","r<"];
 %%
+close all
 figure,showMatchedFeatures(I1_pdic,I2_pdic,vpts1(obj_stat>0,:),vpts2(obj_stat>0,:),'montage','PlotOptions',{'yo','yo','y-'});
 for i = 1:length(vpts1)
     ccstyle = "r<";
@@ -18,8 +19,9 @@ end
 
 %%
 clc
+
 [T,inlierPts,inlierObjs] = RANSACpose2d2d_obj(vpts1,vpts2,obj_stat);
-inlierObjs
+inlierObjs'
 vpts1_inlier = vpts1(inlierPts==1,:);
 vpts2_inlier = vpts2(inlierPts==1,:);
 obj_stat_inler = obj_stat(inlierPts==1,:);%(inlierPts==1&obj_stat(:)~=5&error_Pts(:)<0.2,:);
