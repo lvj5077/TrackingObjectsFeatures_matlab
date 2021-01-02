@@ -53,6 +53,9 @@ while (iterations < iterationMax && foundT==0 )
             error_Pts = sampsonErrf(F_test, objectPts_1, objectPts_2);
             [GoodptsErroridx, GoodptsError] = find(error_Pts<k*SamponDistThreshold);
             rr = length(GoodptsError)/length(error_Pts);
+            if i==5
+                rr = 0;
+            end
             if (rr > feature_inlierRatio)
      
                 inlierPts(objIdex(GoodptsErroridx==1)) = 1;
@@ -60,7 +63,8 @@ while (iterations < iterationMax && foundT==0 )
                     static_weight = static_weight+0.5;%*rr;
                 end
                 static_weight = static_weight+0.5;%*rr;
-                inlierObjs(i) = 1;
+                
+                inlierObjs(i) = rr;
 
             end
         end

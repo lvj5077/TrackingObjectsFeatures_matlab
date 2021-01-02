@@ -12,6 +12,9 @@ for i = 1:length(vpts1)
     ccstyle = "r<";
     if (obj_stat(i,1)>0)
         ccstyle = colorstyle( obj_stat(i,1) );
+    else
+        obj_stat(i,1) = 1;
+        ccstyle = colorstyle( obj_stat(i,1) );
     end
     hold on
     plot(vpts1(i,1),vpts1(i,2),ccstyle);
@@ -28,9 +31,18 @@ inlierObjs'
 error_Pts = sampsonErrf(T, vpts1, vpts2);
 [idx1,~] = find(inlierPts==1);
 [idx2,val] = find(error_Pts'<3e-4);
-[idx,~] = find(obj_stat(idx1)>0);
+idx = idx1(inlierObjs(obj_stat(idx1)) >0);
 %%
-[idx,~] = find(obj_stat(idx1)>0);
+% [idx,~]=find(obj_stat==5);
+% test1 = vpts1(idx,:);
+% test2 = vpts2(idx,:);
+% test_error = sampsonErrf(T, test1, test2);
+% [testIdx,~] = find(test_error'<3e-4);
+% rr = length(testIdx)/length(test1)
+% testIdxinlier = idx(testIdx);
+% 
+% idx = testIdxinlier;
+% [idx,~] = find(obj_stat(idx2)>0);
 vpts1_inlier = vpts1(idx,:);%(inlierPts==1&error_Pts(:)<5e-4,:);
 vpts2_inlier = vpts2(idx,:);%(inlierPts==1&error_Pts(:)<5e-4,:);
 obj_stat_inler = obj_stat(idx,:);%(inlierPts==1&error_Pts(:)<5e-4,:);%(inlierPts==1&obj_stat(:)~=5&error_Pts(:)<0.2,:);
