@@ -46,23 +46,23 @@ while (iterations < iterationMax && foundT==0 )
             k =1;
             all_weight = all_weight+0.5;
             if (i ==1)
-                k=0.7;
+                k=1;
                 all_weight = all_weight+0.5;
             end
             
             error_Pts = sampsonErrf(F_test, objectPts_1, objectPts_2);
             [GoodptsErroridx, GoodptsError] = find(error_Pts<k*SamponDistThreshold);
             rr = length(GoodptsError)/length(error_Pts);
-            if i==5
-                rr = 0;
-            end
-            if (rr > feature_inlierRatio)
+%             if i==5
+%                 rr = 0;
+%             end
+            if (rr > feature_inlierRatio || (i==1&& rr > 0.7))
      
                 inlierPts(objIdex(GoodptsErroridx==1)) = 1;
                 if (i==1) %% background weight is higher
-                    static_weight = static_weight+0.5;%*rr;
+                    static_weight = static_weight+0.5*rr;
                 end
-                static_weight = static_weight+0.5;%*rr;
+                static_weight = static_weight+0.5*rr;
                 
                 inlierObjs(i) = rr;
 
