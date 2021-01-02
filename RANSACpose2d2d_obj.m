@@ -1,5 +1,6 @@
 function [F,inlierPts,inlierObjs] = RANSACpose2d2d_obj(vpts1,vpts2,obj_stat)
-
+hpNum=8;
+confidence=0.99;
 % vpts1 = normalize(vpts1);
 % vpts2 = normalize(vpts2);
 F= zeros(3);
@@ -7,17 +8,17 @@ iterations = 0;
 N = length(vpts1);
 objKinds = max(obj_stat(:,:));
 
+staticLevelThreshold = 0.6;
+SamponDistThreshold = 3e-4;
 feature_inlierRatio=0.6;
-hpNum=8;
-confidence=0.99;
+
 iterationMax=round(log(1-confidence)/log(1-(1-feature_inlierRatio)^hpNum));
 
 iterationMax = max(iterationMax,5000)
 foundT = 0;
 
 % inlierPts = ones(N,1);
-staticLevelThreshold = 0.8;
-SamponDistThreshold = 3e-4;
+
 F_test_localBest = zeros(3);
 static_weight_localBest = 0;
 inlierPts_localBest = zeros(N,1);
@@ -56,9 +57,9 @@ while (iterations < iterationMax && foundT==0 )
      
                 inlierPts(objIdex(GoodptsErroridx==1)) = 1;
                 if (i==1) %% background weight is higher
-                    static_weight = static_weight+0.5*rr;
+                    static_weight = static_weight+0.5;%*rr;
                 end
-                static_weight = static_weight+0.5*rr;
+                static_weight = static_weight+0.5;%*rr;
                 inlierObjs(i) = 1;
 
             end
@@ -77,7 +78,7 @@ while (iterations < iterationMax && foundT==0 )
     if (static_weight/all_weight >staticLevelThreshold)
         foundT = 1;
         F = F_test;
-        all_weight
+        static_weight/all_weight
         disp("iterations "+iterations)
 %         disp("inlier " + inlierNum)
 %         disp("inlier ratio " + inlierNum/N )
