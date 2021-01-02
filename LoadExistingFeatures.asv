@@ -21,8 +21,8 @@ end
 
 %%
 clc
-% [T,inlierPts,inlierObjs] = RANSACpose2d2d_obj(vpts1,vpts2,ones(length(vpts1),1));
-[T,inlierPts,inlierObjs] = RANSACpose2d2d_obj(vpts1,vpts2,obj_stat);
+[T,inlierPts,inlierObjs] = RANSACpose2d2d_obj(vpts1,vpts2,ones(length(vpts1),1));
+% [T,inlierPts,inlierObjs] = RANSACpose2d2d_obj(vpts1,vpts2,obj_stat);
 inlierObjs'
 
 error_Pts = sampsonErrf(T, vpts1, vpts2);
@@ -30,7 +30,7 @@ error_Pts = sampsonErrf(T, vpts1, vpts2);
 [idx2,val] = find(error_Pts'<3e-4);
 [idx,~] = find(obj_stat(idx1)>0);
 %%
-[idx,~] = find(obj_stat(idx1)>0);
+idx = idx1;
 vpts1_inlier = vpts1(idx,:);%(inlierPts==1&error_Pts(:)<5e-4,:);
 vpts2_inlier = vpts2(idx,:);%(inlierPts==1&error_Pts(:)<5e-4,:);
 obj_stat_inler = obj_stat(idx,:);%(inlierPts==1&error_Pts(:)<5e-4,:);%(inlierPts==1&obj_stat(:)~=5&error_Pts(:)<0.2,:);
