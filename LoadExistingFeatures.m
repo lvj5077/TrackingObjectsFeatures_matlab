@@ -1,11 +1,19 @@
+tempPts = cv.goodFeaturesToTrack(I1, 'MaxCorners', 500, 'QualityLevel', 0.005, 'MinDistance', 20);tempMat = cell2mat(tempPts);
+C1 = single(reshape(tempMat',[2,length(tempMat)/2]))';
+figure,imshow(I1_pdic)
+hold on,plot(C1(:,1),C1(:,2),colorstyle(1))
+nextPts = cv.calcOpticalFlowPyrLK(I1, I2, tempPts);
+tempMat = cell2mat(nextPts);
+C2 = single(reshape(tempMat',[2,length(tempMat)/2]))';
+%%
 clear
 close all
-load('obj_stat.mat')
-load('vpts.mat')
+% load('objects.mat')
+load('features.mat')
 I1_pdic = imread('/Users/jin/Desktop/results/predictions125.jpg');
 I2_pdic = imread('/Users/jin/Desktop/results/predictions530.jpg');
 colorstyle = ["g*","b*","c*","m*","r*","mx","b<","r<"];
-%%
+
 close all
 figure,showMatchedFeatures(I1_pdic,I2_pdic,vpts1(obj_stat>0,:),vpts2(obj_stat>0,:),'montage','PlotOptions',{'yo','yo','y-'});
 for i = 1:length(vpts1)
@@ -24,8 +32,10 @@ end
 
 %%
 clc
-% [T,inlierPts,inlierObjs] = RANSACpose2d2d_obj(vpts1,vpts2,ones(length(vpts1),1));
-[T,inlierPts,inlierObjs] = RANSACpose2d2d_obj(vpts1,vpts2,obj_stat);
+[T,inlierPts,inlierObjs] = RANSACpose2d2d_obj(vpts1,vpts2,ones(length(vpts1),1),0.01);
+inlierObjs'
+%%
+[T,inlierPts,inlierObjs] = RANSACpose2d2d_obj(vpts1,vpts2,obj_stat,0.6);
 inlierObjs'
 %%
 error_Pts = sampsonErrf(T, vpts1, vpts2);
@@ -35,7 +45,8 @@ idx = idx1(inlierObjs(obj_stat(idx1)) >0);
 [idx2,val] = find(error_Pts'<2e-4);
 idx = idx2(inlierObjs(obj_stat(idx2)) >0);
 %%
-% idx = idx2;
+idx = idx2;
+%%
 % [idx,~]=find(obj_stat==5);
 % test1 = vpts1(idx,:);
 % test2 = vpts2(idx,:);

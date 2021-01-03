@@ -1,4 +1,4 @@
-function [F,inlierPts,inlierObjs] = RANSACpose2d2d_obj(vpts1,vpts2,obj_stat)
+function [F,inlierPts,inlierObjs] = RANSACpose2d2d_obj(vpts1,vpts2,obj_stat,feature_inlierRatio)
 hpNum=8;
 confidence=0.99;
 % vpts1 = normalize(vpts1);
@@ -10,7 +10,7 @@ objKinds = max(obj_stat(:,:));
 
 staticLevelThreshold = 0.6;
 SamponDistThreshold = 3e-4;
-feature_inlierRatio=0.6;
+% feature_inlierRatio=0.6;
 
 iterationMax=round(log(1-confidence)/log(1-(1-feature_inlierRatio)^hpNum));
 

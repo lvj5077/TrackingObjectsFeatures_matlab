@@ -42,7 +42,7 @@ imshow(I2_pdic)
 masks_obj1 = zeros(480,640);
 prevPts = [];
 
-
+%%
 [w,h] = size(obj_dec1);
 for i = 1:w
     mask_tmp = zeros(480,640);
@@ -98,7 +98,7 @@ Idpt1 = imread('/Users/jin/Desktop/results/depth125.png');
 Idpt1 = imresize(Idpt1,[480,640],'nearest');
 Idpt2 = imread('/Users/jin/Desktop/results/depth530.png');
 Idpt2 = imresize(Idpt2,[480,640],'nearest');
-
+%%
 vpts2 = C2(C2(:,1)>0&C2(:,1)<640&C2(:,2)>0&C2(:,2)<480,:);
 vpts1 = C1(C2(:,1)>0&C2(:,1)<640&C2(:,2)>0&C2(:,2)<480,:);
 
