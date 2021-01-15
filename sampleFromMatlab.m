@@ -48,8 +48,8 @@ C2 = single(reshape(tempMat',[2,length(tempMat)/2]))';
 matchedPoints2 = C2(C2(:,1)>0&C2(:,1)<640&C2(:,2)>0&C2(:,2)<480,:);
 matchedPoints1 = C1(C2(:,1)>0&C2(:,1)<640&C2(:,2)>0&C2(:,2)<480,:);
 %%
-matchedPoints1 = vpts1(obj_stat(:,1)==1,:);
-matchedPoints2 = vpts2(obj_stat(:,1)==1,:);
+matchedPoints1 = vpts1(obj_stat(:,1)~=11,:);
+matchedPoints2 = vpts2(obj_stat(:,1)~=11,:);
 % Visualize correspondences
 figure
 showMatchedFeatures(I1, I1, matchedPoints1, matchedPoints1);
