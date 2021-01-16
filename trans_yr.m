@@ -194,7 +194,7 @@ for i = 1:secNum
     MeanError(i,1) = mean( abs( results(:,i,1)-gt(1,i)  )  );
     MeanError(i,2) = mean( abs( results(:,i,2)-gt(2,i)  )  );
     MeanError(i,3) = mean( abs( results(:,i,3)-gt(3,i)  )  );
-    MeanError(i,4) = mean( abs( results(:,i,4)-gt_d(i)  )  );
+    MeanError(i,4) = mean( abs( results(:,i,4)-abs(gt_d(i))  )  );
     STDresults(i,:) = reshape(std(results(:,i,:)),[1,4]);
     
     nexttile
@@ -220,8 +220,8 @@ title(t,'translation Y-axis','FontSize',40)
 xlabel(t,'trail number','FontSize',30)
 ylabel(t,'Measurement (mm)','FontSize',30)
 
-exportgraphics(h,'/Users/jin/Library/Mobile Documents/com~apple~CloudDocs/iphone_ego/trans_y.png') 
-csvwrite("/Users/jin/Library/Mobile Documents/com~apple~CloudDocs/iphone_ego/trans_y_pnp.csv",results)
+exportgraphics(h,'/Users/jin/Library/Mobile Documents/com~apple~CloudDocs/iphone_ego/trans_x.png') 
+csvwrite("/Users/jin/Library/Mobile Documents/com~apple~CloudDocs/iphone_ego/trans_x_pnp.csv",results)
 
 Meanresults
 MeanError
