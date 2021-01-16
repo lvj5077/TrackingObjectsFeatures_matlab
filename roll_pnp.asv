@@ -173,7 +173,7 @@ for testId = 1:testNum
 end
 %%
 
-fff=abs(resultsR(:,:)-gt_d.*ones(testNum,1));
+fff=abs(resultsR(:,:)-gt_d.*ones(189,1));
 [x,y] = find(fff>0.5);
 resultsR(x,:)=[];
 results(x,:,:)=[];
@@ -199,7 +199,7 @@ for i = 1:secNum
     MeanError(i,3) = mean( abs( results(:,i,3)-gt(3,i)  )  );
     STDresults(i,:) = reshape(std(results(:,i,:)),[1,3]);
     
-    figure,plot(resultsR(:,i))
+    figure,plot(resultsR(:,9,1))
 end
 Meanresults
 MeanError

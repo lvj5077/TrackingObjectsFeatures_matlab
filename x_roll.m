@@ -131,6 +131,7 @@ Meanresults = zeros(secNum-1,3);
 MeanError = zeros(secNum-1,3);
 STDresults = zeros(secNum-1,3);
 
+%%
 for i = 1:secNum-1
     Meanresults(i,1) = mean( ( results(:,i,1) )  );
     Meanresults(i,2) = mean( ( results(:,i,2)  )  );
@@ -144,11 +145,11 @@ end
 Meanresults
 MeanError
 STDresults
-%%
-figure,
-subplot(3,1,1)
-plot(results(:,2,1))
-subplot(3,1,2)
-plot(results(:,2,2))
-subplot(3,1,3)
-plot(results(:,2,3))
+% %%
+% figure,
+% subplot(3,1,1)
+% plot(results(:,2,1))
+% subplot(3,1,2)
+% plot(results(:,2,2))
+% subplot(3,1,3)
+% plot(results(:,2,3))
