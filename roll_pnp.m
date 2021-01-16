@@ -1,23 +1,23 @@
 clear
 close all
-% clc
+clc
 addpath('/Users/jin/Q_Mac/mexopencv');
 %%
-testNum = 200;
+testNum = 10;
 stdIdx = 1;
 gt_d = [    3.3100
-    6.3700
-    9.4400
-   12.5000
-   15.4400
-   18.6300
-   21.6900
-   24.7500
-   27.8200
-   30.7600]';
+            6.3700
+            9.4400
+           12.5000
+           15.4400
+           18.6300
+           21.6900
+           24.7500
+           27.8200
+           30.7600]';
 secNum = length(gt_d);
-results = zeros(testNum,secNum,3);
-resultsR = zeros(testNum,secNum);
+results = zeros(testNum,secNum,4);
+results_pnp = zeros(testNum,secNum,4);
 gt = [zeros(1,secNum);zeros(1,secNum);gt_d];
 % secNum = secNum+1;
 
@@ -109,19 +109,25 @@ for testId = 1:testNum
     %     outDir = data_path+"summary/1"+"to"+num2str(i)+".png";
     %     exportgraphics(h,outDir) 
         imgId = 200+testId;
-        dd = importdata(data_path+num2str(1)+"/Frames.txt");
+        
+        
+        
+        
+        dd = importdata(data_path+num2str(i)+"/Frames.txt");
+        fx = dd(imgId,3);
+        fy = dd(imgId,4);
+        cx = dd(imgId,5);
+        cy = dd(imgId,6);
+        K2 = [fx,0,cx;0,fy,cy;0,0,1];
+        
+        dd = importdata(data_path+num2str(1)+"/Frames.txt");        
         fx = dd(imgId,3);
         fy = dd(imgId,4);
         cx = dd(imgId,5);
         cy = dd(imgId,6);
         K1 = [fx,0,cx;0,fy,cy;0,0,1];
         
-%         dd = importdata(data_path+num2str(i)+"/Frames.txt");
-%         fx = dd(imgId,3);
-%         fy = dd(imgId,4);
-%         cx = dd(imgId,5);
-%         cy = dd(imgId,6);
-%         K2 = [fx,0,cx;0,fy,cy;0,0,1];
+
         mvImg = [];
         fixObj = [];
         for j = 1:length(prevPts)
@@ -160,59 +166,82 @@ for testId = 1:testNum
             end
         end
         [rvec, tvec, success, inliers] = cv.solvePnPRansac(fixObj, mvImg, K1);
-%         K = (K1+K2)/2;
-%         E = K1' * F * K1;
-%         [R, t, good, mask, triangulatedPoints] = cv.recoverPose(E,prevPts,nextPts);
-
+        K = (K1+K2)/2;
+        E = K1' * F * K1;
+        [R, t, good, mask, triangulatedPoints] = cv.recoverPose(E,prevPts,nextPts);
+        results(testId,i,1:3) = rotm2eul(R)*180/pi;
+        axang = rotm2axang(R);
+        results(testId,i,4) = axang(4)*180/pi;
+        
+        
 %         tvec'
         rotm = cv.Rodrigues(rvec);
-        results(testId,i,:) = rotm2eul(rotm)*180/pi;
+        results_pnp(testId,i,1:3) = rotm2eul(rotm)*180/pi;
         axang = rotm2axang(rotm);
-        resultsR(testId,i) = axang(4)*180/pi;
+        results_pnp(testId,i,4) = axang(4)*180/pi;
     end
 end
 %%
-
-fff=abs(resultsR(:,:)-gt_d.*ones(testNum,1));
-[x,y] = find(fff>0.5);
+checkOutlier=abs(results(:,:,4)-gt_d.*ones(testNum,1));
+checkOutlierPnP=abs(results_pnp(:,:,4)-gt_d.*ones(testNum,1));
+[x,y] = find(checkOutlierPnP>0.2 & checkOutlier>0.2);
 length(x)
-resultsR(x,:)=[];
+results_pnp(x,:,:)=[];
 results(x,:,:)=[];
+%%
 
+Meanresults = zeros(secNum,4);
+MeanError = zeros(secNum,4);
+STDresults = zeros(secNum,4);
 
-Meanresults = zeros(secNum,3);
-MeanError = zeros(secNum,3);
-STDresults = zeros(secNum,3);
-MeanresultsM = zeros(secNum,1);
-MeanresultsMm = zeros(secNum,1);
-MeanresultsMstd = zeros(secNum,1);
 for i = 1:secNum
     Meanresults(i,1) = mean( ( results(:,i,1) )  );
     Meanresults(i,2) = mean( ( results(:,i,2)  )  );
     Meanresults(i,3) = mean( ( results(:,i,3)  )  );
     
-    MeanresultsM(i) = mean( resultsR(:,i) );
-    MeanresultsMm(i) = mean( abs( resultsR(:,i)-gt_d(i) ));
-    MeanresultsMstd(i) = std(  resultsR(:,i)-gt_d(i) );
+
 
     MeanError(i,1) = mean( abs( results(:,i,1)-gt(1,i)  )  );
     MeanError(i,2) = mean( abs( results(:,i,2)-gt(2,i)  )  );
     MeanError(i,3) = mean( abs( results(:,i,3)-gt(3,i)  )  );
-    STDresults(i,:) = reshape(std(results(:,i,:)),[1,3]);
     
-    figure,plot(resultsR(:,i))
+    Meanresults(i,4) = mean( results(:,i,4) );
+    MeanError(i,4) = mean( abs( results(:,i,4)-gt_d(i) ));
+
+    
+    STDresults(i,:) = reshape(std(results(:,i,:)),[1,4]);
+    
+    figure,plot(results(:,i,4))
 end
 Meanresults
 MeanError
 STDresults
-MeanresultsM
-MeanresultsMm
-MeanresultsMstd
 
-figure,
-subplot(3,1,1)
-plot(results(:,5,1))
-subplot(3,1,2)
-plot(results(:,5,2))
-subplot(3,1,3)
-plot(results(:,5,3))
+%%
+
+MeanresultsPnP = zeros(secNum,4);
+MeanErrorPnP = zeros(secNum,4);
+STDresultsPnP = zeros(secNum,4);
+
+for i = 1:secNum
+    MeanresultsPnP(i,1) = mean( ( results_pnp(:,i,1) )  );
+    MeanresultsPnP(i,2) = mean( ( results_pnp(:,i,2)  )  );
+    MeanresultsPnP(i,3) = mean( ( results_pnp(:,i,3)  )  );
+    
+
+
+    MeanErrorPnP(i,1) = mean( abs( results_pnp(:,i,1)-gt(1,i)  )  );
+    MeanErrorPnP(i,2) = mean( abs( results_pnp(:,i,2)-gt(2,i)  )  );
+    MeanErrorPnP(i,3) = mean( abs( results_pnp(:,i,3)-gt(3,i)  )  );
+    
+    MeanresultsPnP(i,4) = mean( results_pnp(:,i,4) );
+    MeanErrorPnP(i,4) = mean( abs( results_pnp(:,i,4)-gt_d(i) ));
+
+    
+    STDresultsPnP(i,:) = reshape(std(results_pnp(:,i,:)),[1,4]);
+    
+    figure,plot(results_pnp(:,i,4))
+end
+MeanresultsPnP
+MeanErrorPnP
+STDresultsPnP
