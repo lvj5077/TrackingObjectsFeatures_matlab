@@ -18,7 +18,7 @@ gt = [gt_d;zeros(1,secNum);zeros(1,secNum)];
 
 %%
 for testId = 1:testNum
-    testId
+%     testId
     imgId = 250+testId;
     data_path = "/Volumes/BlackSSD/rotateIP12/trans_y/trans_y_";
     I1 = imread(data_path+num2str(stdIdx)+"/color/"+num2str(imgId)+".png");
@@ -157,7 +157,7 @@ for testId = 1:testNum
         end
         [rvec, tvec, success, inliers] = cv.solvePnPRansac(fixObj, mvImg, K2);
 %         K = (K1+K2)/2;
-%         E = K1' * F * K1;
+%         E = K2' * F * K1;
 %         [R, t, good, mask, triangulatedPoints] = cv.recoverPose(E,prevPts,nextPts);
 
 %         tvec'
