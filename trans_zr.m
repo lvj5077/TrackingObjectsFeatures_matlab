@@ -1,23 +1,18 @@
 clear
 close all
+format short g
 clc
 addpath('/Users/jin/Q_Mac/mexopencv');
 %%
 testNum = 250;
-stdIdx = 1;
-gt_d = [    3.3100
-            6.3700
-            9.4400
-           12.5000
-           15.4400
-           18.6300
-           21.6900
-           24.7500
-           27.8250
-           30.7600]';
+stdIdx = 10;
+gt_d = 10*[    10
+    20
+    30
+   40
+   50]';
 secNum = length(gt_d);
 results = zeros(testNum,secNum,4);
-results_pnp = zeros(testNum,secNum,4);
 gt = [zeros(1,secNum);zeros(1,secNum);gt_d];
 % secNum = secNum+1;
 
@@ -25,7 +20,7 @@ gt = [zeros(1,secNum);zeros(1,secNum);gt_d];
 for testId = 1:testNum
     testId
     imgId = 250+testId;
-    data_path = "/Volumes/BlackSSD/rotateIP12/rpy/x/rot_roll_";
+    data_path = "/Volumes/BlackSSD/rotateIP12/trans_z/trans_z_";
     I1 = imread(data_path+num2str(stdIdx)+"/color/"+num2str(imgId)+".png");
     I1 = rgb2gray(I1);
 
@@ -110,25 +105,19 @@ for testId = 1:testNum
     %     outDir = data_path+"summary/1"+"to"+num2str(i)+".png";
     %     exportgraphics(h,outDir) 
         imgId = 250+testId;
-        
-        
-        
-        
-        dd = importdata(data_path+num2str(i)+"/Frames.txt");
-        fx = dd(imgId,3);
-        fy = dd(imgId,4);
-        cx = dd(imgId,5);
-        cy = dd(imgId,6);
-        K2 = [fx,0,cx;0,fy,cy;0,0,1];
-        
-        dd = importdata(data_path+num2str(1)+"/Frames.txt");        
+        dd = importdata(data_path+num2str(1)+"/Frames.txt");
         fx = dd(imgId,3);
         fy = dd(imgId,4);
         cx = dd(imgId,5);
         cy = dd(imgId,6);
         K1 = [fx,0,cx;0,fy,cy;0,0,1];
         
-
+%         dd = importdata(data_path+num2str(i)+"/Frames.txt");
+%         fx = dd(imgId,3);
+%         fy = dd(imgId,4);
+%         cx = dd(imgId,5);
+%         cy = dd(imgId,6);
+%         K2 = [fx,0,cx;0,fy,cy;0,0,1];
         mvImg = [];
         fixObj = [];
         for j = 1:length(prevPts)
@@ -166,120 +155,73 @@ for testId = 1:testNum
                 mvImg = [double(nextPts(j,:));mvImg];
             end
         end
-        [rvec, tvec, success, inliers] = cv.solvePnPRansac(fixObj, mvImg, K1);
-        K = (K1+K2)/2;
-        E = K1' * F * K1;
-        [R, t, good, mask, triangulatedPoints] = cv.recoverPose(E,prevPts,nextPts);
-        results(testId,i,1:3) = rotm2eul(R)*180/pi;
-        axang = rotm2axang(R);
-        results(testId,i,4) = axang(4)*180/pi;
-        
-        
+        [rvec, tvec, success, inliers] = cv.solvePnPRansac(fixObj, mvImg, K2);
+%         K = (K1+K2)/2;
+%         E = K1' * F * K1;
+%         [R, t, good, mask, triangulatedPoints] = cv.recoverPose(E,prevPts,nextPts);
+
 %         tvec'
-        rotm = cv.Rodrigues(rvec);
-        results_pnp(testId,i,1:3) = rotm2eul(rotm)*180/pi;
-        axang = rotm2axang(rotm);
-        results_pnp(testId,i,4) = axang(4)*180/pi;
+        results(testId,i,1:3) = 1000*tvec';
+        results(testId,i,4) = 1000*norm(tvec);
     end
 end
+
 %%
-results_pnp_bkp = results_pnp;
 results_bkp = results;
+
 %%
 results = results_bkp;
-results_pnp = results_pnp_bkp;
-outlierThes = 0.3;
-sigmaTimes = 5;
+
+% fff=abs(results(:,:,3));
+% [x,y] = find(fff>100);
+% results(x,:,:)=[];
 Meanresults = zeros(secNum,4);
 MeanError = zeros(secNum,4);
 STDresults = zeros(secNum,4);
+MeanresultsM = zeros(secNum,1);
+MeanresultsMm = zeros(secNum,1);
+MeanresultsMstd = zeros(secNum,1);
 h = figure('units','normalized','outerposition',[0 0 1 1]);
-
+t = tiledlayout(1,secNum,'TileSpacing','Compact','units','normalized','outerposition',[0 0 1 1]);
 for i = 1:secNum
-
-    Meanresults(i,4) = mean( results(:,i,4) );
-    MeanError(i,4) = mean( abs( results(:,i,4)-gt_d(i) ));
-    STDresults(i,:) = reshape(std(results(:,i,:)),[1,4]);
-    
-    checkOutlier=abs(results(:,i,4)-median( results(:,i,4) ).*ones(length(results),1));
-    [x,y] = find(checkOutlier>min(1,max(outlierThes,STDresults(i,4)*sigmaTimes)));
-%     [x,y] = find(checkOutlier>STDresults(i,4)*sigmaTimes|checkOutlier>0.5);
-    results(x,:,:)=[];
-%     [x,y] = find(checkOutlier>1);
-%     results(x,:,:)=[];
-    
-
     Meanresults(i,1) = mean( ( results(:,i,1) )  );
     Meanresults(i,2) = mean( ( results(:,i,2)  )  );
     Meanresults(i,3) = mean( ( results(:,i,3)  )  );
+    Meanresults(i,4) = mean( ( results(:,i,4)  )  );
 
     MeanError(i,1) = mean( abs( results(:,i,1)-gt(1,i)  )  );
     MeanError(i,2) = mean( abs( results(:,i,2)-gt(2,i)  )  );
     MeanError(i,3) = mean( abs( results(:,i,3)-gt(3,i)  )  );
-    
-    Meanresults(i,4) = mean( results(:,i,4) );
-    MeanError(i,4) = mean( abs( results(:,i,4)-gt_d(i) ));
+    MeanError(i,4) = mean( abs( results(:,i,4)-gt_d(i)  )  );
     STDresults(i,:) = reshape(std(results(:,i,:)),[1,4]);
     
-    subplot(2,secNum,i)
-    plot(results(:,i,4))
+    nexttile
+%     subplot(1,secNum,i)
+    pt1 = plot(results(:,i,4),'b.','Markersize',10);
     hold on
-    plot(gt_d(i)*ones(1,length(results)),'r')
+    pt3 = plot(abs(gt_d(i))*ones(1,length(results)),'r','Linewidth',5);
     hold on
-    plot(Meanresults(i,4)*ones(1,length(results)),'g:','Linewidth',2)
+    pt2 = plot(Meanresults(i,4)*ones(1,length(results)),'g','Linewidth',5);
+    hold on
+    pt4 = plot((Meanresults(i,4)-2*STDresults(i,4))*ones(1,length(results)),'k--','Linewidth',3);
+    pt4 = plot((Meanresults(i,4)+2*STDresults(i,4))*ones(1,length(results)),'k--','Linewidth',3);
+    ylim([Meanresults(i,4)-20,Meanresults(i,4)+20])
     grid minor
-    ylim([Meanresults(i,4)-1,Meanresults(i,4)+1])
+    set(gca,'FontSize',20)
+    set(gcf,'color','w');
+    if i ==1
+        legend([pt1 pt2 pt3 pt4],{'Measurement','Mean','Groundtruth','2-sigma'},'FontSize',10)
+    end
     
 end
+title(t,'translation Z-axis','FontSize',40)
+xlabel(t,'trail number','FontSize',30)
+ylabel(t,'Measurement (mm)','FontSize',30)
+
+exportgraphics(h,'/Users/jin/Library/Mobile Documents/com~apple~CloudDocs/iphone_ego/trans_z.png') 
+csvwrite("/Users/jin/Library/Mobile Documents/com~apple~CloudDocs/iphone_ego/trans_z_pnp.csv",results)
+
 
 Meanresults
 MeanError
 STDresults
-
-
-
-MeanresultsPnP = zeros(secNum,4);
-MeanErrorPnP = zeros(secNum,4);
-STDresultsPnP = zeros(secNum,4);
-% h = figure('units','normalized','outerposition',[0 0 1 0.3]);
-for i = 1:secNum
-    MeanresultsPnP(i,4) = mean( results_pnp(:,i,4) );
-    MeanErrorPnP(i,4) = mean( abs( results_pnp(:,i,4)-gt_d(i) ));
-    STDresultsPnP(i,:) = reshape(std(results_pnp(:,i,:)),[1,4]);
-    
-    checkOutlierPnP=abs(results_pnp(:,i,4)-median( results_pnp(:,i,4) ).*ones(length(results_pnp),1));
-    
-    [x,y] = find(checkOutlierPnP(:,1)>min(1,max(outlierThes,STDresultsPnP(i,4)*sigmaTimes)));
-    results_pnp(x,:,:)=[];
-    
-
-    MeanresultsPnP(i,1) = mean( ( results_pnp(:,i,1) )  );
-    MeanresultsPnP(i,2) = mean( ( results_pnp(:,i,2)  )  );
-    MeanresultsPnP(i,3) = mean( ( results_pnp(:,i,3)  )  );
-
-    MeanErrorPnP(i,1) = mean( abs( results_pnp(:,i,1)-gt(1,i)  )  );
-    MeanErrorPnP(i,2) = mean( abs( results_pnp(:,i,2)-gt(2,i)  )  );
-    MeanErrorPnP(i,3) = mean( abs( results_pnp(:,i,3)-gt(3,i)  )  );
-    
-    MeanresultsPnP(i,4) = mean( results_pnp(:,i,4) );
-    MeanErrorPnP(i,4) = mean( abs( results_pnp(:,i,4)-gt_d(i) ));
-    STDresultsPnP(i,:) = reshape(std(results_pnp(:,i,:)),[1,4]);
-    
-    subplot(2,secNum,i+secNum)
-    plot(results_pnp(:,i,4))
-    hold on
-    plot(gt_d(i)*ones(1,length(results_pnp)),'r')
-    hold on
-    plot(MeanresultsPnP(i,4)*ones(1,length(results_pnp)),'g:','Linewidth',2)
-    ylim([MeanresultsPnP(i,4)-1,MeanresultsPnP(i,4)+1])
-    grid minor
-    
-    
-end
-MeanresultsPnP
-MeanErrorPnP
-STDresultsPnP
-
-
-length(results)/testNum
-length(results_pnp)/testNum

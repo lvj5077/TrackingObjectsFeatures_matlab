@@ -1,23 +1,25 @@
 clear
 close all
-% clc
+format short g
+clc
 addpath('/Users/jin/Q_Mac/mexopencv');
 %%
-testNum = 200;
-stdIdx = 1;
-gt = -10*[    10
+testNum = 250;
+stdIdx = 10;
+gt_d = -10*[    10
     20
     30
    40
    50]';
-secNum = length(gt);
-results = zeros(testNum,secNum,3);
-gt = [gt;zeros(1,secNum);zeros(1,secNum)];
+secNum = length(gt_d);
+results = zeros(testNum,secNum,4);
+gt = [gt_d;zeros(1,secNum);zeros(1,secNum)];
 % secNum = secNum+1;
 
 
 for testId = 1:testNum
-    imgId = 200+testId;
+    testId
+    imgId = 250+testId;
     data_path = "/Volumes/BlackSSD/rotateIP12/trans_y/trans_y_";
     I1 = imread(data_path+num2str(stdIdx)+"/color/"+num2str(imgId)+".png");
     I1 = rgb2gray(I1);
@@ -34,7 +36,7 @@ for testId = 1:testNum
     
     for i = 1:secNum
 %         K = [1460.110474,0,956.812561;0,1460.110474,652.749084;0,0,1];
-        imgId = 200+testId;
+        imgId = 250+testId;
         I_cur = imread(data_path+num2str(i+stdIdx)+"/color/"+num2str(imgId)+".png");
 %         I_cur = imread(color_path+num2str(i)+".png");
         I_cur = rgb2gray(I_cur);
@@ -63,7 +65,7 @@ for testId = 1:testNum
     checkPts = prevPts;
     Inxt = I1;
     for i = 1:secNum
-        imgId = 200+testId;
+        imgId = 250+testId;
 %         I_cur = imread(color_path+num2str(i)+".png");
         I_cur = imread(data_path+num2str(i+stdIdx)+"/color/"+num2str(imgId)+".png");
         I_cur = rgb2gray(I_cur);
@@ -102,7 +104,7 @@ for testId = 1:testNum
 %         showMatchedFeatures(I1,Inxt,prevPts,nextPts,'montage','PlotOptions',{'g.','r.','y-'});
     %     outDir = data_path+"summary/1"+"to"+num2str(i)+".png";
     %     exportgraphics(h,outDir) 
-        imgId = 200+testId;
+        imgId = 250+testId;
         dd = importdata(data_path+num2str(1)+"/Frames.txt");
         fx = dd(imgId,3);
         fy = dd(imgId,4);
@@ -159,43 +161,66 @@ for testId = 1:testNum
 %         [R, t, good, mask, triangulatedPoints] = cv.recoverPose(E,prevPts,nextPts);
 
 %         tvec'
-        results(testId,i,:) = 1000*tvec';
+        results(testId,i,1:3) = 1000*tvec';
+        results(testId,i,4) = 1000*norm(tvec);
     end
 end
+
 %%
+results_bkp = results;
+
+%%
+results = results_bkp;
+
 % fff=abs(results(:,:,3));
 % [x,y] = find(fff>100);
 % results(x,:,:)=[];
-Meanresults = zeros(secNum,3);
-MeanError = zeros(secNum,3);
-STDresults = zeros(secNum,3);
+Meanresults = zeros(secNum,4);
+MeanError = zeros(secNum,4);
+STDresults = zeros(secNum,4);
 MeanresultsM = zeros(secNum,1);
 MeanresultsMm = zeros(secNum,1);
 MeanresultsMstd = zeros(secNum,1);
+h = figure('units','normalized','outerposition',[0 0 1 1]);
+t = tiledlayout(1,secNum,'TileSpacing','Compact','units','normalized','outerposition',[0 0 1 1]);
 for i = 1:secNum
     Meanresults(i,1) = mean( ( results(:,i,1) )  );
     Meanresults(i,2) = mean( ( results(:,i,2)  )  );
     Meanresults(i,3) = mean( ( results(:,i,3)  )  );
-    MeanresultsM(i) = mean(vecnorm([results(:,i,1),results(:,i,2),results(:,i,3)]' ));
-    MeanresultsMm(i) = mean(abs(vecnorm([results(:,i,1),results(:,i,2),results(:,i,3)]' )-100*i));
-    MeanresultsMstd(i) = std(abs(vecnorm([results(:,i,1),results(:,i,2),results(:,i,3)]' )-100*i));
+    Meanresults(i,4) = mean( ( results(:,i,4)  )  );
 
     MeanError(i,1) = mean( abs( results(:,i,1)-gt(1,i)  )  );
     MeanError(i,2) = mean( abs( results(:,i,2)-gt(2,i)  )  );
     MeanError(i,3) = mean( abs( results(:,i,3)-gt(3,i)  )  );
-    STDresults(i,:) = reshape(std(results(:,i,:)),[1,3]);
+    MeanError(i,4) = mean( abs( results(:,i,4)-gt_d(i)  )  );
+    STDresults(i,:) = reshape(std(results(:,i,:)),[1,4]);
+    
+    nexttile
+%     subplot(1,secNum,i)
+    pt1 = plot(results(:,i,4),'b.','Markersize',10);
+    hold on
+    pt3 = plot(abs(gt_d(i))*ones(1,length(results)),'r','Linewidth',5);
+    hold on
+    pt2 = plot(Meanresults(i,4)*ones(1,length(results)),'g','Linewidth',5);
+    hold on
+    pt4 = plot((Meanresults(i,4)-2*STDresults(i,4))*ones(1,length(results)),'k--','Linewidth',3);
+    pt4 = plot((Meanresults(i,4)+2*STDresults(i,4))*ones(1,length(results)),'k--','Linewidth',3);
+    ylim([Meanresults(i,4)-20,Meanresults(i,4)+20])
+    grid minor
+    set(gca,'FontSize',20)
+    set(gcf,'color','w');
+    if i ==1
+        legend([pt1 pt2 pt3 pt4],{'Measurement','Mean','Groundtruth','2-sigma'},'FontSize',10)
+    end
+    
 end
+title(t,'translation Y-axis','FontSize',40)
+xlabel(t,'trail number','FontSize',30)
+ylabel(t,'Measurement (mm)','FontSize',30)
+
+exportgraphics(h,'trans_y.png') 
+csvwrite("trans_y_pnp.csv",results)
+
 Meanresults
 MeanError
 STDresults
-MeanresultsM
-MeanresultsMm
-MeanresultsMstd
-%%
-figure,
-subplot(3,1,1)
-plot(results(:,5,1))
-subplot(3,1,2)
-plot(results(:,5,2))
-subplot(3,1,3)
-plot(results(:,5,3))

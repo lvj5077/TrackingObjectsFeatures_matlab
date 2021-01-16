@@ -1,31 +1,33 @@
 clear
 close all
+format short g
 clc
 addpath('/Users/jin/Q_Mac/mexopencv');
 %%
 testNum = 250;
 stdIdx = 1;
-gt_d = [    3.3100
-            6.3700
-            9.4400
-           12.5000
-           15.4400
-           18.6300
-           21.6900
-           24.7500
-           27.8250
-           30.7600]';
+gt_d = [
+
+3.19
+
+6.25
+
+9.31
+
+12.38
+
+15.44
+
+18.50]';
 secNum = length(gt_d);
 results = zeros(testNum,secNum,4);
 results_pnp = zeros(testNum,secNum,4);
-gt = [zeros(1,secNum);zeros(1,secNum);gt_d];
-% secNum = secNum+1;
-
+gt = [-gt_d;zeros(1,secNum);zeros(1,secNum)];
 
 for testId = 1:testNum
-    testId
+%     testId
     imgId = 250+testId;
-    data_path = "/Volumes/BlackSSD/rotateIP12/rpy/x/rot_roll_";
+    data_path = "/Volumes/BlackSSD/rotateIP12/rpy/z/rot_yaw_";
     I1 = imread(data_path+num2str(stdIdx)+"/color/"+num2str(imgId)+".png");
     I1 = rgb2gray(I1);
 
@@ -110,9 +112,12 @@ for testId = 1:testNum
     %     outDir = data_path+"summary/1"+"to"+num2str(i)+".png";
     %     exportgraphics(h,outDir) 
         imgId = 250+testId;
-        
-        
-        
+        dd = importdata(data_path+num2str(1)+"/Frames.txt");
+        fx = dd(imgId,3);
+        fy = dd(imgId,4);
+        cx = dd(imgId,5);
+        cy = dd(imgId,6);
+        K1 = [fx,0,cx;0,fy,cy;0,0,1];
         
         dd = importdata(data_path+num2str(i)+"/Frames.txt");
         fx = dd(imgId,3);
@@ -120,15 +125,6 @@ for testId = 1:testNum
         cx = dd(imgId,5);
         cy = dd(imgId,6);
         K2 = [fx,0,cx;0,fy,cy;0,0,1];
-        
-        dd = importdata(data_path+num2str(1)+"/Frames.txt");        
-        fx = dd(imgId,3);
-        fy = dd(imgId,4);
-        cx = dd(imgId,5);
-        cy = dd(imgId,6);
-        K1 = [fx,0,cx;0,fy,cy;0,0,1];
-        
-
         mvImg = [];
         fixObj = [];
         for j = 1:length(prevPts)
@@ -166,9 +162,9 @@ for testId = 1:testNum
                 mvImg = [double(nextPts(j,:));mvImg];
             end
         end
-        [rvec, tvec, success, inliers] = cv.solvePnPRansac(fixObj, mvImg, K1);
+        [rvec, tvec, success, inliers] = cv.solvePnPRansac(fixObj, mvImg, K2);
         K = (K1+K2)/2;
-        E = K1' * F * K1;
+        E = K2' * F * K1;
         [R, t, good, mask, triangulatedPoints] = cv.recoverPose(E,prevPts,nextPts);
         results(testId,i,1:3) = rotm2eul(R)*180/pi;
         axang = rotm2axang(R);
@@ -182,19 +178,24 @@ for testId = 1:testNum
         results_pnp(testId,i,4) = axang(4)*180/pi;
     end
 end
+
+% clc
 %%
 results_pnp_bkp = results_pnp;
 results_bkp = results;
+csvwrite("/Users/jin/Library/Mobile Documents/com~apple~CloudDocs/iphone_ego/rot_z_8p.csv",results)
+csvwrite("/Users/jin/Library/Mobile Documents/com~apple~CloudDocs/iphone_ego/rot_z_pnp.csv",results_pnp)
+
 %%
 results = results_bkp;
 results_pnp = results_pnp_bkp;
-outlierThes = 0.3;
+outlierThes = 0.5;
 sigmaTimes = 5;
 Meanresults = zeros(secNum,4);
 MeanError = zeros(secNum,4);
 STDresults = zeros(secNum,4);
 h = figure('units','normalized','outerposition',[0 0 1 1]);
-
+t = tiledlayout(2,secNum,'TileSpacing','Compact','units','normalized','outerposition',[0 0 1 1]);
 for i = 1:secNum
 
     Meanresults(i,4) = mean( results(:,i,4) );
@@ -221,16 +222,29 @@ for i = 1:secNum
     MeanError(i,4) = mean( abs( results(:,i,4)-gt_d(i) ));
     STDresults(i,:) = reshape(std(results(:,i,:)),[1,4]);
     
-    subplot(2,secNum,i)
-    plot(results(:,i,4))
+    nexttile
+%     subplot(1,secNum,i)
+    pt1 = plot(results(:,i,4),'b.','Markersize',10);
     hold on
-    plot(gt_d(i)*ones(1,length(results)),'r')
+    pt3 = plot(abs(gt_d(i))*ones(1,length(results)),'r','Linewidth',5);
     hold on
-    plot(Meanresults(i,4)*ones(1,length(results)),'g:','Linewidth',2)
+    pt2 = plot(Meanresults(i,4)*ones(1,length(results)),'g','Linewidth',5);
+    hold on
+    pt4 = plot((Meanresults(i,4)-2*STDresults(i,4))*ones(1,length(results)),'k--','Linewidth',3);
+    pt4 = plot((Meanresults(i,4)+2*STDresults(i,4))*ones(1,length(results)),'k--','Linewidth',3);
+    ylim([Meanresults(i,4)-.5,Meanresults(i,4)+.5])
     grid minor
-    ylim([Meanresults(i,4)-1,Meanresults(i,4)+1])
+    set(gca,'FontSize',20)
+    set(gcf,'color','w');
+    if i ==1
+%         legend([pt1 pt2 pt3 pt4],{'Measurement','Mean','Groundtruth','2-sigma'},'FontSize',10)
+%         set(get(gca,'ylabel'),'rotation',270)
+        y = ylabel('8Point','FontSize',30);
+%         set(y, 'position', get(y,'position')-[0.01,0.1,0]); 
+    end
     
 end
+
 
 Meanresults
 MeanError
@@ -265,17 +279,36 @@ for i = 1:secNum
     MeanErrorPnP(i,4) = mean( abs( results_pnp(:,i,4)-gt_d(i) ));
     STDresultsPnP(i,:) = reshape(std(results_pnp(:,i,:)),[1,4]);
     
-    subplot(2,secNum,i+secNum)
-    plot(results_pnp(:,i,4))
+    nexttile
+%     subplot(1,secNum,i)
+    pt1 = plot(results_pnp(:,i,4),'b.','Markersize',10);
     hold on
-    plot(gt_d(i)*ones(1,length(results_pnp)),'r')
+    pt3 = plot(abs(gt_d(i))*ones(1,length(results_pnp)),'r','Linewidth',5);
     hold on
-    plot(MeanresultsPnP(i,4)*ones(1,length(results_pnp)),'g:','Linewidth',2)
-    ylim([MeanresultsPnP(i,4)-1,MeanresultsPnP(i,4)+1])
+    pt2 = plot(MeanresultsPnP(i,4)*ones(1,length(results_pnp)),'g','Linewidth',5);
+    hold on
+    pt4 = plot((MeanresultsPnP(i,4)-2*STDresultsPnP(i,4))*ones(1,length(results_pnp)),'k--','Linewidth',3);
+    pt4 = plot((MeanresultsPnP(i,4)+2*STDresultsPnP(i,4))*ones(1,length(results_pnp)),'k--','Linewidth',3);
+    ylim([MeanresultsPnP(i,4)-.5,MeanresultsPnP(i,4)+.5])
     grid minor
+    set(gca,'FontSize',20)
+    set(gcf,'color','w');
+    if i ==1
+%         set(get(gca,'ylabel'),'rotation',0)
+        y = ylabel('PnP','FontSize',30);
+%         set(y, 'position', get(y,'position')-[0.01,0.1,0]); 
+    end
     
     
 end
+
+title(t,'rotation Z-axis','FontSize',40)
+xlabel(t,'trail number','FontSize',30)
+ylabel(t,'Measurement (degree)','FontSize',30)
+
+exportgraphics(h,'/Users/jin/Library/Mobile Documents/com~apple~CloudDocs/iphone_ego/rot_z.png') 
+
+
 MeanresultsPnP
 MeanErrorPnP
 STDresultsPnP
