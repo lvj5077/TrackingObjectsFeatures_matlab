@@ -175,6 +175,7 @@ end
 
 fff=abs(resultsR(:,:)-gt_d.*ones(testNum,1));
 [x,y] = find(fff>0.5);
+length(x)
 resultsR(x,:)=[];
 results(x,:,:)=[];
 

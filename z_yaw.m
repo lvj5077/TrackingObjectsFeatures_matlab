@@ -3,7 +3,7 @@ close all
 % clc
 addpath('/Users/jin/Q_Mac/mexopencv');
 %%
-testNum = 200;
+testNum = 20;
 gt = [
 
 3.19
@@ -148,10 +148,10 @@ Meanresults
 MeanError
 STDresults
 %%
-figure,
-subplot(3,1,1)
-plot(results(:,2,1))
-subplot(3,1,2)
-plot(results(:,2,2))
-subplot(3,1,3)
-plot(results(:,2,3))
+% figure,
+% subplot(3,1,1)
+% plot(results(:,2,1))
+% subplot(3,1,2)
+% plot(results(:,2,2))
+% subplot(3,1,3)
+% plot(results(:,2,3))
