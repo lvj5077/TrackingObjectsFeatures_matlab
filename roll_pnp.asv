@@ -3,7 +3,7 @@ close all
 clc
 addpath('/Users/jin/Q_Mac/mexopencv');
 %%
-testNum = 5;
+testNum = 200;
 stdIdx = 1;
 gt_d = [    3.3100
             6.3700
@@ -222,7 +222,7 @@ STDresults
 MeanresultsPnP = zeros(secNum,4);
 MeanErrorPnP = zeros(secNum,4);
 STDresultsPnP = zeros(secNum,4);
-figure
+
 for i = 1:secNum
     MeanresultsPnP(i,1) = mean( ( results_pnp(:,i,1) )  );
     MeanresultsPnP(i,2) = mean( ( results_pnp(:,i,2)  )  );
@@ -240,8 +240,7 @@ for i = 1:secNum
     
     STDresultsPnP(i,:) = reshape(std(results_pnp(:,i,:)),[1,4]);
     
-    subplot(1,secNum,i)
-    plot(results_pnp(:,i,4))
+    subplot(1,secNum,i)plot(results_pnp(:,i,4))
 end
 MeanresultsPnP
 MeanErrorPnP
