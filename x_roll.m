@@ -3,17 +3,26 @@ close all
 % clc
 addpath('/Users/jin/Q_Mac/mexopencv');
 %%
-testNum = 200;
-gt = [3.1300    6.1900    9.2500   12.3200   15.3200   18.4400];
+testNum = 10;
+gt = [    3.3100
+    6.3700
+    9.4400
+   12.5000
+   15.4400
+   18.6300
+   21.6900
+   24.7500
+   27.8200
+   30.7600]';
 secNum = length(gt);
 results = zeros(testNum,secNum,3);
-gt = [zeros(1,secNum);gt;zeros(1,secNum)];
+gt = [zeros(1,secNum);zeros(1,secNum);gt];
 secNum = secNum+1;
 
 
 for testId = 1:testNum
-    imgId = 200+testId;
-    data_path = "/Volumes/BlackSSD/rotateIP12/rpy/y/rot_pitch_";
+    imgId = 250+testId;
+    data_path = "/Volumes/BlackSSD/rotateIP12/rpy/x/rot_roll_";
     I1 = imread(data_path+"1/color/"+num2str(imgId)+".png");
     I1 = rgb2gray(I1);
 
@@ -21,7 +30,7 @@ for testId = 1:testNum
     Ipre = I1;
     Inxt = I1;
 
-    tempCell = cv.goodFeaturesToTrack(Ipre, 'MaxCorners', 801, 'QualityLevel', 0.01, 'MinDistance', 20);
+    tempCell = cv.goodFeaturesToTrack(Ipre, 'MaxCorners', 800, 'QualityLevel', 0.01, 'MinDistance', 20);
     prevPts = double(reshape(cell2mat(tempCell)',[2,length(tempCell)]))';
     firstPts = prevPts;
     nextPts = prevPts; 
@@ -108,7 +117,8 @@ for testId = 1:testNum
         cx = dd(imgId,5);
         cy = dd(imgId,6);
         K2 = [fx,0,cx;0,fy,cy;0,0,1];
-        E = K2' * F * K1;
+        K = (K1+K2)/2;
+        E = K1' * F * K1;
         [R, t, good, mask, triangulatedPoints] = cv.recoverPose(E,prevPts,nextPts);
         results(testId,i-1,:) = rotm2eul(R)*180/pi;
     end
