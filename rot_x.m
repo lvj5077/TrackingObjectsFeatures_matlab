@@ -109,12 +109,7 @@ for testId = 1:testNum
     %     outDir = data_path+"summary/1"+"to"+num2str(i)+".png";
     %     exportgraphics(h,outDir) 
         imgId = 250+testId;
-        dd = importdata(data_path+num2str(1)+"/Frames.txt");
-        fx = dd(imgId,3);
-        fy = dd(imgId,4);
-        cx = dd(imgId,5);
-        cy = dd(imgId,6);
-        K1 = [fx,0,cx;0,fy,cy;0,0,1];
+        
         
         dd = importdata(data_path+num2str(i)+"/Frames.txt");
         fx = dd(imgId,3);
@@ -122,6 +117,15 @@ for testId = 1:testNum
         cx = dd(imgId,5);
         cy = dd(imgId,6);
         K2 = [fx,0,cx;0,fy,cy;0,0,1];
+        
+        dd = importdata(data_path+num2str(1)+"/Frames.txt");
+        fx = dd(imgId,3);
+        fy = dd(imgId,4);
+        cx = dd(imgId,5);
+        cy = dd(imgId,6);
+        K1 = [fx,0,cx;0,fy,cy;0,0,1];
+        
+
         mvImg = [];
         fixObj = [];
         for j = 1:length(prevPts)
