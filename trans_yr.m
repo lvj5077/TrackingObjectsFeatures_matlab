@@ -155,6 +155,8 @@ for testId = 1:testNum
                 mvImg = [double(nextPts(j,:));mvImg];
             end
         end
+        
+        
         [rvec, tvec, success, inliers] = cv.solvePnPRansac(fixObj, mvImg, K2);
 %         K = (K1+K2)/2;
 %         E = K2' * F * K1;
